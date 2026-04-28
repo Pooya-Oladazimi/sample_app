@@ -1,0 +1,38 @@
+{
+  "family": "my-first-ecs-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["EC2"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::719005870718:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "app",
+      "image": "719005870718.dkr.ecr.eu-central-1.amazonaws.com/test-app:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp"
+        }
+      ]
+    },
+    {
+      "name": "nginx",
+      "image": "719005870718.dkr.ecr.eu-central-1.amazonaws.com/my-nginx",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "protocol": "tcp"
+        }
+      ],
+      "dependsOn": [
+        {
+          "containerName": "app",
+          "condition": "START"
+        }
+      ]
+    }
+  ]
+}
