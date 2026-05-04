@@ -1,9 +1,12 @@
-FROM python:3.12-slim
+FROM python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     UV_COMPILE_BYTECODE=1 \
-    UV_LINK_MODE=copy
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=never \
+    VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:/usr/local/bin:$PATH"
 
 WORKDIR /app
 
@@ -11,24 +14,25 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.local/bin:$PATH"
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 COPY pyproject.toml uv.lock ./
 
-RUN uv sync --frozen --no-dev
+RUN uv venv --python /usr/local/bin/python /app/.venv \
+    && uv sync --frozen --no-dev --python /app/.venv/bin/python
 
 COPY . .
 
-RUN useradd --create-home appuser \
+RUN /app/.venv/bin/python -c "import sys, encodings; print(sys.executable); print(sys.prefix)" \
+    && useradd --create-home appuser \
     && chown -R appuser:appuser /app
 
 USER appuser
 
-EXPOSE 8000
+EXPOSE 8080
 
-CMD ["uv", "run", "gunicorn", "main:app", \
+CMD ["/app/.venv/bin/python", "-m", "gunicorn", "main:app", \
      "-k", "uvicorn.workers.UvicornWorker", \
-     "--bind", "0.0.0.0:8000", \
+     "--bind", "0.0.0.0:8080", \
      "--workers", "4", \
      "--timeout", "60"]
