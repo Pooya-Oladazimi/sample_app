@@ -16,4 +16,4 @@ wheels/
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
-.ebextentions
+.ebextensions
