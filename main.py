@@ -21,3 +21,8 @@ def user():
 @app.get("/post")
 def post():
     return {"_result": "This is a Post."}
+
+
+@app.get("news")
+def news():
+    return {"_result": "This is the latest news."}
